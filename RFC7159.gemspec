@@ -52,7 +52,7 @@ Gem::Specification.new do |spec|
 	spec.homepage      = 'http://github.com/shyouhei/RFC7159'
 	spec.license       = "Simplified BSD License" # consult LICENSE.txt
 
-	spec.files         = `git ls-files -z`.split("\x0")
+	spec.files         = `git ls-files -z`.split("\x0") + %w'lib/RFC7159/parser.rb'
 	spec.executables   = %w''
 	spec.test_files    = spec.files.grep(%r{^spec/})
 	spec.require_paths = %w'lib'

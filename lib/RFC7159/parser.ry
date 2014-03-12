@@ -1,0 +1,153 @@
+#! /your/favourite/path/to/racc
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2014 Urabe, Shyouhei.  All rights reserved.
+#
+# Redistribution  and  use  in  source   and  binary  forms,  with  or  without
+# modification, are  permitted provided that the following  conditions are met:
+#
+#     - Redistributions  of source  code must  retain the  above copyright
+#       notice, this list of conditions and the following disclaimer.
+#
+#     - Redistributions in binary form  must reproduce the above copyright
+#       notice, this  list of conditions  and the following  disclaimer in
+#       the  documentation  and/or   other  materials  provided  with  the
+#       distribution.
+#
+#     - Neither the name of Internet  Society, IETF or IETF Trust, nor the
+#       names of specific contributors, may  be used to endorse or promote
+#       products derived from this software without specific prior written
+#       permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# AND ANY  EXPRESS OR  IMPLIED WARRANTIES, INCLUDING,  BUT NOT LIMITED  TO, THE
+# IMPLIED WARRANTIES  OF MERCHANTABILITY AND  FITNESS FOR A  PARTICULAR PURPOSE
+# ARE  DISCLAIMED. IN NO  EVENT SHALL  THE COPYRIGHT  OWNER OR  CONTRIBUTORS BE
+# LIABLE  FOR   ANY  DIRECT,  INDIRECT,  INCIDENTAL,   SPECIAL,  EXEMPLARY,  OR
+# CONSEQUENTIAL  DAMAGES  (INCLUDING,  BUT   NOT  LIMITED  TO,  PROCUREMENT  OF
+# SUBSTITUTE  GOODS OR SERVICES;  LOSS OF  USE, DATA,  OR PROFITS;  OR BUSINESS
+# INTERRUPTION)  HOWEVER CAUSED  AND ON  ANY  THEORY OF  LIABILITY, WHETHER  IN
+# CONTRACT,  STRICT  LIABILITY, OR  TORT  (INCLUDING  NEGLIGENCE OR  OTHERWISE)
+# ARISING IN ANY  WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF  ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# This is  almost one-to-one translation of  RFC7159 section 2 through  7, from
+# Augmented BNF  to Racc BNF.  Should  be the easiest to  verify implementation
+# against the spec.
+#
+# @note This  parser has several  shift/reduct conflicts.  They are  all around
+#   handling of white spaces (called "ws"), so can silently be ignored.  I also
+#   checked the parser internal and made sure they are OK.
+class RFC7159::Parser
+
+	options no_result_var
+	expect 28
+	rule
+
+	# Notes  about nonterminal's  names: in  order to  make manual  verification
+	# easy, all the nonterminals that appear in the RFC are named as such.  ABNF
+	# is  much  concise  than  plain  BNF,  so  here  we  added  several  helper
+	# nonterminals; they  are prefixed  with "__"  so you  can distinguish  if a
+	# nonterminal is RFC-origin or not.
+
+	# RFC7159 section 2
+
+	JSON_text       : ws value ws
+	begin_array     : ws "\x5B" ws # [ left square bracket
+	begin_object    : ws "\x7B" ws # { left curly bracket
+	end_array       : ws "\x5D" ws # ] right square bracket
+	end_object      : ws "\x7D" ws # } right curly bracket
+	name_separator  : ws "\x3A" ws # : colon
+	value_separator : ws "\x2C" ws # , comma
+	ws              :              # <- this is the '*' in the ABNF
+	                | ws "\x20"    # Space
+	                | ws "\x09"    # Horizontal tab
+	                | ws "\x0A"    # Line feed or New line
+	                | ws "\x0D"    # Carriage return
+
+	# RFC7159 section 3
+
+	value           : false | null | true | object | array | number | string
+	false           : "\x66" "\x61" "\x6c" "\x73" "\x65" # false
+	null            : "\x6e" "\x75" "\x6c" "\x6c"        # null
+	true            : "\x74" "\x72" "\x75" "\x65"        # true
+
+	# RFC7159 section 4
+
+	object          : begin_object             end_object
+	                | begin_object __members__ end_object
+	__members__     : member
+	                | __members__ value_separator member
+	member          : string name_separator value
+
+	# RFC7159 section 5
+
+	array           : begin_array          end_array
+	                | begin_array __list__ end_array
+	__list__        : value
+	                | __list__ value_separator value
+
+	# RFC7159 section 6
+
+	number          : __minus_p__ int __frac_p__ __exp_p__
+	__minus_p__     : | minus
+	__frac_p__      : | frac
+	__exp_p__       : | exp
+	decimal_point   : "\x2E" # .
+	digit1_9        : "\x31" | "\x32" | "\x33" | "\x34" | "\x35"
+	                | "\x36" | "\x37" | "\x38" | "\x39"
+	e               : "\x65" | "\x45"    # e E
+	exp             : e __sign__ __digit_plus__
+	frac            : decimal_point __digit_plus__
+	int             : zero | digit1_9 | digit1_9 __digit_plus__
+	minus           : "\x2D" # -
+	plus            : "\x2B" # +
+	zero            : "\x30" # 0
+	DIGIT           : zero  | digit1_9
+	__sign__        : plus  | minus
+	__digit_plus__  : DIGIT
+	                | __digit_plus__ DIGIT
+
+	# RFC7159 section 7
+
+	string          : quotation_mark           quotation_mark
+	                | quotation_mark __chars__ quotation_mark
+	__chars__       : char
+	                | __chars__ char
+	char            : unescaped
+	                | escape "\x22" # "    quotation mark  U+0022
+	                | escape "\x5C" # \    reverse solidus U+005C
+	                | escape "\x2F" # /    solidus         U+002F
+	                | escape "\x62" # b    backspace       U+0008
+	                | escape "\x66" # f    form feed       U+000C
+	                | escape "\x6E" # n    line feed       U+000A
+	                | escape "\x72" # r    carriage return U+000D
+	                | escape "\x74" # t    tab             U+0009
+	                | escape "\x75" HEXDIG HEXDIG HEXDIG HEXDIG
+	                                # uXXXX                U+XXXX
+	escape          : "\x5C"        # \
+	quotation_mark  : "\x22"        # "
+	HEXDIG          : DIGIT
+	                | "\x61" | "\x62" | "\x63" | "\x64" | "\x65" | "\x66"
+	                | "\x41" | "\x42" | "\x43" | "\x44" | "\x45" | "\x46"
+
+	# "unescaped" is too much to list up here; use lexer instead.
+	# unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+	unescaped : error { yyerrok }
+end
+
+---- inner
+	def next_token
+	end
+---- footer
+
+# 
+# Local Variables:
+# mode: ruby
+# coding: utf-8-unix
+# indent-tabs-mode: t
+# tab-width: 3
+# ruby-indent-level: 3
+# fill-column: 79
+# default-justification: full
+# End:

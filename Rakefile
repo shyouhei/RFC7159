@@ -52,6 +52,13 @@ end
 require 'yard'
 YARD::Rake::YardocTask.new
 
+task yard:  'lib/RFC7159/parser.rb'
+task rdoc:  'lib/RFC7159/parser.rb'
+task build: 'lib/RFC7159/parser.rb'
+file 'lib/RFC7159/parser.rb' => %w'lib/RFC7159/parser.ry' do |t|
+	sh "bundle exec racc --output-file=#{t.name} #{t.prerequisites.first}"
+end
+
 task default: :spec
 
 # 
