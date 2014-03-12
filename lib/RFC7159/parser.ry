@@ -133,11 +133,40 @@ class RFC7159::Parser
 
 	# "unescaped" is too much to list up here; use lexer instead.
 	# unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
-	unescaped : error { yyerrok }
 end
 
 ---- inner
+	def parse str, yydebug: false
+		@yydebug = yydebug
+		@str     = str
+		@enum    = @str.each_char
+		@state   = :init
+		return do_parse
+	end
+
 	def next_token
+		chr = @enum.next
+		tok = chr # dfault
+		case @state
+		when :string  then # recap: unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+			case chr.ord
+			when 0x20..0x21     then    tok = :unescaped
+			when 0x22           then @state = :init      # "
+			when 0x23..0x5B     then    tok = :unescaped
+			when 0x5C           then @state = :escaped   # \
+			when 0x5D..0x10FFFF then    tok = :unescaped
+			else                     @state = :string    # NG unicode
+			end
+		when :init    then @state = (chr == '"') ? :string : :init
+		when :escaped then @state = (chr == 'u') ? :u1     : :string
+		when :u1      then @state = :u2
+		when :u2      then @state = :u3
+		when :u3      then @state = :u4
+		when :u4      then @state = :string
+		end
+		return tok, chr
+	rescue
+		return false, @enum
 	end
 ---- footer
 
