@@ -136,14 +136,59 @@ class RFC7159::Parser
 end
 
 ---- inner
-	def parse str, yydebug: false
-		@yydebug = yydebug
-		@str     = str
-		@enum    = @str.each_char
-		@state   = :init
-		return do_parse
+
+	# @option opts [true, false] :accept_bom  Whether to accept BOMs
+	# @option opts [true, false] :yydebug     Whether to enable debug mode
+	def initialize accept_bom: false, yydebug: false
+		@accept_bom = accept_bom
+		@yydebug    = yydebug
 	end
 
+	# Parses str  and generates  AST.  The  str must consist  of _a_  valid JSON
+	# text, otherwise an exception shall raise.
+	#
+	# @param  [#each_char] str    IO or String or something to parse
+	# @return [Array]             Parsed AST
+	# @raise  [Racc::ParseError]  The input is invalid
+	def parse str
+		@state      = :init
+		@enum       = str.enum_for:each_char
+		firstchar   = @enum.peek
+
+		case enc = firstchar.encoding
+		when Encoding::UTF_8,
+		     Encoding::US_ASCII, # true subset of UTF-8
+		     Encoding::UTF8_MAC, # true subset of UTF-8
+		     Encoding::UTF_16LE,
+		     Encoding::UTF_16BE,
+		     Encoding::UTF_32LE,
+		     Encoding::UTF_32BE
+			# RFC7159 sectoin 8.1 explicitly states  that the input string must be
+			# either UTF  8, 16, or  32 -encoded.  That point  is as clear  as the
+			# sky.  All other  encodings are NG.  However, what we  call the ASCII
+			# encoding is the  true subset of UTF-8.  A string  of ASCII must also
+			# be valid as UTF-8.  So we allow this.
+			#
+			# There are disucssions about parsing BOMs.  The original RFC4627 said
+			# nothing about  BOMs, however  its section  3 ("Encoding")  cannot be
+			# read  as  if  it  expected BOMs.   Current  RFC7159  _prohibits_  to
+			# generate JSON texts with BOMs but _allows_ to accept.
+			#
+			# This parser can control whether to accept BOMs.
+			if @accept_bom and firstchar == "\u{feff}".encode(enc)
+				@enum.next # consume
+			end
+			return do_parse
+		else
+			raise Encoding::CompatibilityError, <<-"end".gsub(/[\n\s]+/, ' ')
+				``JSON text  SHALL be encoded  in UTF-8, UTF-16, or  UTF-32'', said
+				RFC7159  section 8.1.   The given  string is  NOT in  any of  those
+				encodings (but #{enc.inspect}).
+			end
+		end
+	end
+
+	private
 	def next_token
 		chr = @enum.next
 		tok = chr # dfault
@@ -168,6 +213,7 @@ end
 	rescue StopIteration
 		return false, @enum
 	end
+
 ---- footer
 
 # 
