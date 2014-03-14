@@ -154,6 +154,8 @@ end
 		@state      = :init
 		@enum       = str.enum_for:each_char
 		firstchar   = @enum.peek
+		@lineno     = 1
+		@column     = 1
 
 		case enc = firstchar.encoding
 		when Encoding::UTF_8,
@@ -192,6 +194,13 @@ end
 	def next_token
 		chr = @enum.next
 		tok = chr # dfault
+		newline, @newline = @newline, /[\r\n]/.match(chr)
+		if newline
+			@lineno += 1
+			@column = 1
+		else
+			@column += 1
+		end
 		case @state
 		when :string  then # recap: unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
 			case chr.ord
@@ -212,6 +221,33 @@ end
 		return tok, chr
 	rescue StopIteration
 		return false, @enum
+	end
+
+	def on_error id, val, stack
+		reason = case @state
+		when :string
+			'this character is not allowed in a string; escape it.'
+		when :u1, :u2, :u3, :u4
+			'\uXXXX must exactly be a four-letter hexadecimal sequence.'
+		else
+			case val
+			when "'"
+				'you must use " to quote strings'
+			when '}', ']', ','
+				'possible extra (dangling) comma?'
+			when ':'
+				'possible confusion of {} vs []?'
+			when /\s/
+				'possible space inside of a number?'
+			when /\d/
+				'possible lack of +/- in exponent?'
+			else
+				'unexpected character'
+			end
+		end
+		msg = sprintf 'Syntax error near line %d, char %d (%p): %s',
+			@lineno, @column, val, reason
+		raise Racc::ParseError, msg
 	end
 
 ---- footer
