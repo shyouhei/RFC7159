@@ -52,7 +52,7 @@ class RFC7159::Parser
 
 	# RFC7159 section 2
 
-	JSON_text       : ws value ws
+	JSON_text       : ws value  ws                              { val[1] }
 	begin_array     : ws "\x5B" ws # [ left square bracket
 	begin_object    : ws "\x7B" ws # { left curly bracket
 	end_array       : ws "\x5D" ws # ] right square bracket
@@ -68,28 +68,28 @@ class RFC7159::Parser
 	# RFC7159 section 3
 
 	value           : false | null | true | object | array | number | string
-	false           : "\x66" "\x61" "\x6c" "\x73" "\x65" # false
-	null            : "\x6e" "\x75" "\x6c" "\x6c"        # null
-	true            : "\x74" "\x72" "\x75" "\x65"        # true
+	false           : "\x66" "\x61" "\x6c" "\x73" "\x65"        { [ :false ] } # false
+	null            : "\x6e" "\x75" "\x6c" "\x6c"               { [ :null  ] } # null
+	true            : "\x74" "\x72" "\x75" "\x65"               { [ :true  ] } # true
 
 	# RFC7159 section 4
 
-	object          : begin_object             end_object
-	                | begin_object __members__ end_object
-	__members__     : member
-	                | __members__ value_separator member
-	member          : string name_separator value
+	object          : begin_object             end_object       { [ :object ] }
+	                | begin_object __members__ end_object       { [ :object, *val[1] ] }
+	__members__     : member                                    { val }
+	                | __members__ value_separator member        { [ *val[0],  val[2] ] }
+	member          : string name_separator value               { [  val[0],  val[2] ] }
 
 	# RFC7159 section 5
 
-	array           : begin_array          end_array
-	                | begin_array __list__ end_array
-	__list__        : value
-	                | __list__ value_separator value
+	array           : begin_array          end_array            { [ :array ] }
+	                | begin_array __list__ end_array            { [ :array, *val[1] ] }
+	__list__        : value                                     { val }
+	                | __list__ value_separator value            { [ *val[0], val[2] ] }
 
 	# RFC7159 section 6
 
-	number          : __minus_p__ int __frac_p__ __exp_p__
+	number          : __minus_p__ int __frac_p__ __exp_p__      { [ :number, *val ] }
 	__minus_p__     : | minus
 	__frac_p__      : | frac
 	__exp_p__       : | exp
@@ -97,36 +97,36 @@ class RFC7159::Parser
 	digit1_9        : "\x31" | "\x32" | "\x33" | "\x34" | "\x35"
 	                | "\x36" | "\x37" | "\x38" | "\x39"
 	e               : "\x65" | "\x45"    # e E
-	exp             : e __sign__ __digit_plus__
-	frac            : decimal_point __digit_plus__
-	int             : zero | digit1_9 | digit1_9 __digit_plus__
+	exp             : e __sign__ __digit_plus__                 { val }
+	frac            : decimal_point __digit_plus__              { val }
+	int             : zero | digit1_9 | digit1_9 __digit_plus__ { [ val[0], *val[1] ] }
 	minus           : "\x2D" # -
 	plus            : "\x2B" # +
 	zero            : "\x30" # 0
 	DIGIT           : zero  | digit1_9
 	__sign__        : plus  | minus
-	__digit_plus__  : DIGIT
-	                | __digit_plus__ DIGIT
+	__digit_plus__  : DIGIT                                     { val }
+	                | __digit_plus__ DIGIT                      { [ val[0], *val[1] ] }
 
 	# RFC7159 section 7
 
-	string          : quotation_mark           quotation_mark
-	                | quotation_mark __chars__ quotation_mark
-	__chars__       : char
-	                | __chars__ char
-	char            : unescaped
-	                | escape "\x22" # "    quotation mark  U+0022
-	                | escape "\x5C" # \    reverse solidus U+005C
-	                | escape "\x2F" # /    solidus         U+002F
-	                | escape "\x62" # b    backspace       U+0008
-	                | escape "\x66" # f    form feed       U+000C
-	                | escape "\x6E" # n    line feed       U+000A
-	                | escape "\x72" # r    carriage return U+000D
-	                | escape "\x74" # t    tab             U+0009
-	                | escape "\x75" HEXDIG HEXDIG HEXDIG HEXDIG
-	                                # uXXXX                U+XXXX
-	escape          : "\x5C"        # \
-	quotation_mark  : "\x22"        # "
+	string          : quotation_mark           quotation_mark   { [ :string ] }
+	                | quotation_mark __chars__ quotation_mark   { [ :string, *val[1] ] }
+	__chars__       : char                                      { val }
+	                | __chars__ char                            { [ *val[0],  val[1] ] }
+	char            : unescaped | escape __ctrl__               { val }
+	__ctrl__        : "\x22" # "    quotation mark  U+0022
+	                | "\x5C" # \    reverse solidus U+005C
+	                | "\x2F" # /    solidus         U+002F
+	                | "\x62" # b    backspace       U+0008
+	                | "\x66" # f    form feed       U+000C
+	                | "\x6E" # n    line feed       U+000A
+	                | "\x72" # r    carriage return U+000D
+	                | "\x74" # t    tab             U+0009
+	                | "\x75" # uXXXX                U+XXXX
+	                         HEXDIG HEXDIG HEXDIG HEXDIG        { val }
+	escape          : "\x5C" # \
+	quotation_mark  : "\x22" # "
 	HEXDIG          : DIGIT
 	                | "\x61" | "\x62" | "\x63" | "\x64" | "\x65" | "\x66"
 	                | "\x41" | "\x42" | "\x43" | "\x44" | "\x45" | "\x46"
