@@ -106,7 +106,7 @@ class RFC7159::Parser
 	DIGIT           : zero  | digit1_9
 	__sign__        : plus  | minus
 	__digit_plus__  : DIGIT                                     { val }
-	                | __digit_plus__ DIGIT                      { [ val[0], *val[1] ] }
+	                | __digit_plus__ DIGIT                      { [ *val[0], val[1] ] }
 
 	# RFC7159 section 7
 
@@ -137,8 +137,8 @@ end
 
 ---- inner
 
-	# @option opts [true, false] :accept_bom  Whether to accept BOMs
-	# @option opts [true, false] :yydebug     Whether to enable debug mode
+	# @param [true, false] accept_bom  Whether to accept BOMs
+	# @param [true, false] yydebug     Whether to enable debug mode
 	def initialize accept_bom: false, yydebug: false
 		@accept_bom = accept_bom
 		@yydebug    = yydebug
