@@ -55,12 +55,6 @@ class RFC7159::Value
 				  when :number then RFC7159::Number
 				  when :string then RFC7159::String
 				  end
-		if [RFC7159::Object, RFC7159::Array].include? klass
-			h = Thread.current['RFC7159::Value'] || Hash.new
-			raise ArgumentError, 'cyclic component detected' if h.include? ast
-			h.store ast, true
-			Thread.current['RFC7159::Value'] = h
-		end
 		return klass.from_ast ast
 	end
 
