@@ -99,12 +99,14 @@ class RFC7159::Parser
 	e               : "\x65" | "\x45"    # e E
 	exp             : e __sign__ __digit_plus__                 { val }
 	frac            : decimal_point __digit_plus__              { val }
-	int             : zero | digit1_9 | digit1_9 __digit_plus__ { [ val[0], *val[1] ] }
+	int             : zero                                      { val }
+	                | digit1_9                                  { val }
+	                | digit1_9 __digit_plus__                   { [ val[0], *val[1] ] }
 	minus           : "\x2D" # -
 	plus            : "\x2B" # +
 	zero            : "\x30" # 0
 	DIGIT           : zero  | digit1_9
-	__sign__        : plus  | minus
+	__sign__        : | plus  | minus
 	__digit_plus__  : DIGIT                                     { val }
 	                | __digit_plus__ DIGIT                      { [ *val[0], val[1] ] }
 
