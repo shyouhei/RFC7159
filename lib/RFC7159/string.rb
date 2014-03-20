@@ -88,7 +88,7 @@ class RFC7159::String < RFC7159::Value
 					i[1][1..4].join.to_i 16
 				end
 			else
-				i
+				i.ord
 			end
 		end
 
@@ -98,22 +98,44 @@ class RFC7159::String < RFC7159::Value
 		# It says  nothing.  Here, we  try to  preserve the JSON  text's encoding
 		# i.e. if  the JSON text  is in UTF-16, we  try UTF-16.  If  that doesn't
 		# fit, we give up and take BINARY.
-		str1  = ''.b
-		path2 = path1.inject str1 do |r, i|
-			j = i
-			case i when Integer
-				case enc
-				when Encoding::UTF_32BE then j = [i].pack 'N'
-				when Encoding::UTF_32LE then j = [i].pack 'V'
-				when Encoding::UTF_16BE then j = [i].pack 'n'
-				when Encoding::UTF_16LE then j = [i].pack 'v'
-				else                         j = [i].pack 'U' # sort of UTF-8
+		buf   = nil
+		path2 = path1.each_with_object Array.new do |i, r|
+			if buf.nil?
+				next buf = i
+			else
+				case buf when 0xD800..0xDBFF
+					case i when 0xDC00..0xDFFF
+						# valid surrogate pair
+						utf16str = [buf, i].pack 'nn'
+						utf16str.force_encoding Encoding::UTF_16BE
+						r << utf16str[0].ord
+						buf = nil # consumed
+					else
+						# buf is a garbage
+						r << buf
+						buf = i
+					end
+				else
+					# buf is a normal char
+					r << buf
+					buf = i
 				end
+			end
+		end
+		path2 << buf if buf # buf might remain
+
+		path3 = path2.each_with_object ''.b do |i, r|
+			case enc
+			when Encoding::UTF_32BE then j = [i].pack 'N'
+			when Encoding::UTF_32LE then j = [i].pack 'V'
+			when Encoding::UTF_16BE then j = [i].pack 'n'
+			when Encoding::UTF_16LE then j = [i].pack 'v'
+			else                         j = [i].pack 'U' # sort of UTF-8
 			end
 			r << j.b
 		end
-		str2 = path2.dup.force_encoding enc
-		@str = str2.valid_encoding? ? str2 : str1
+		path4 = path3.dup.force_encoding enc
+		@str  = path4.valid_encoding? ? path4 : path3
 	end
 end
 
