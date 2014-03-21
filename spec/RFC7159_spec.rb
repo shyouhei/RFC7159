@@ -43,14 +43,12 @@ describe RFC7159 do
 				the_dir = this_dir + 'acceptance/valid'
 				the_dir.find do |f|
 					case f.extname when '.json'
-						context f.basename do
-							it 'should be valid' do
-								expect do
-									f.open 'r:utf-8' do |fp|
-										RFC7159.load fp
-									end
-								end.to_not raise_exception
-							end
+						it "should be valid: #{f.basename}" do
+							expect do
+								f.open 'r:utf-8' do |fp|
+									RFC7159.load fp
+								end
+							end.to_not raise_exception
 						end
 					end
 				end
@@ -60,14 +58,12 @@ describe RFC7159 do
 				the_dir = this_dir + 'acceptance/invalid'
 				the_dir.find do |f|
 					case f.extname when '.txt'
-						context f.basename do
-							it 'should be invalid' do
-								expect do
-									f.open 'r:utf-8' do |fp|
-										RFC7159.load fp
-									end
-								end.to raise_exception
-							end
+						it "should be invalid: #{f.basename}" do
+							expect do
+								f.open 'r:utf-8' do |fp|
+									RFC7159.load fp
+								end
+							end.to raise_exception
 						end
 					end
 				end
