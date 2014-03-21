@@ -59,6 +59,15 @@ file 'lib/RFC7159/parser.rb' => %w'lib/RFC7159/parser.ry' do |t|
 	sh "bundle exec racc --debug --output-file=#{t.name} #{t.prerequisites.first}"
 end
 
+desc "a la rails console"
+task :console do
+	require_relative 'lib/RFC7159'
+	require 'irb'
+	require 'irb/completion'
+	ARGV.clear
+	IRB.start
+end
+
 task default: :spec
 
 # 
