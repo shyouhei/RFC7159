@@ -8,12 +8,11 @@ Russell's paradox -like  behaviour, where one cannot say  if that text
 All  files  under this  directory,  including  this  file itself,  are
 written  by  me,  Urabe  Shyouhei <shyouhei@ruby-lang.org>.   You  can
 safely copy & paste them to your project to test your own JSON parser.
-In conveniece  for your own parser,  most (not all)  files starts with
-'[' and  ends with ']'.  This  is because that should  also pass older
-JSON spec (RFC4627).
 
-I copy  the license of this  project below, just in  case you separate
+I repeat the license of this  project below, just in case you separate
 this test suite form the library.
+
+----------------------------------------------------------------------
 
 Copyright (c) 2014 Urabe, Shyouhei.  All rights reserved.
 
@@ -45,4 +44,23 @@ DATA, OR PROFITS; OR BUSINESS  INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF  LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY,  OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING  IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+----------------------------------------------------------------------
+
+P.S.  For those who copy & paste the test cases to your own parser:
+
+  - In convenience  for your own  parser, most (not all)  files starts
+    with '[' and ends with ']'.  This is because that should also pass
+    older JSON spec (RFC4627).
+
+  - RFC7159 requests us, with using the strongest word (“MUST”) that
+    all the valid examples are to  be accepted.  On the other hand the
+    RFC _allows_ you to extend  the grammar to, say, accept JavaScript
+    comments  and so  on.  So  failure in  parsing valid  examples are
+    fatal, but accepting invalid examples might not.
+
+  - RFC7159 tells  no so much  about semantics.  For instance  it does
+    not define object equality.  It does not even define the character
+    set  of  parsed JSON  strings  (it  DOES  define the  encoding  of
+    generated JSON text themselves though).
 
