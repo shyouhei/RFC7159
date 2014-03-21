@@ -165,7 +165,7 @@ end
 		when :u4      then @state = :string
 		end
 		return tok, chr
-	rescue
+	rescue StopIteration
 		return false, @enum
 	end
 ---- footer
