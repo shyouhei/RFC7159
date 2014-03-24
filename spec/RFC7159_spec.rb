@@ -35,10 +35,10 @@ require_relative 'spec_helper'
 require 'pathname'
 
 describe RFC7159 do
+	this_dir = Pathname.new __dir__
+
 	describe '.load' do
 		context 'acceptance' do
-			this_dir = Pathname.new __dir__
-
 			context 'valid' do
 				the_dir = this_dir + 'acceptance/valid'
 				the_dir.find do |f|
@@ -64,6 +64,31 @@ describe RFC7159 do
 									RFC7159.load fp
 								end
 							end.to raise_exception
+						end
+					end
+				end
+			end
+		end
+	end
+
+	describe '.dump' do
+		context 'round-tripness' do
+			the_dir = this_dir + 'acceptance/valid'
+			the_dir.find do |f|
+				case f.extname when '.json'
+					context f.basename do
+						before :all do
+							@str = f.open 'r:utf-8' do |fp| fp.read end
+							@obj = RFC7159.load @str
+						end
+
+						subject do
+							RFC7159.dump @obj
+						end
+
+						it "should round-trip" do
+							# not interested in indents
+							expect(subject.gsub(/\s+/, '')).to eq(@str.gsub(/\s+/, ''))
 						end
 					end
 				end

@@ -45,9 +45,15 @@ class RFC7159::True < RFC7159::Value
 	end
 
 	# convert to Ruby's true
-	# return [true] the ruby counter part.
+	# @return [true] the ruby counter part.
 	def plain_old_ruby_object
 		return true
+	end
+
+	# JSON gem compat
+	# @return [::String] JSONified string representation
+	def to_json
+		return 'true'
 	end
 
 	# Equality.   All true  instances are  equal  each other,  plus a  TrueClass

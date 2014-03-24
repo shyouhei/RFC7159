@@ -55,7 +55,13 @@ class RFC7159::Array < RFC7159::Value
 		@array[idx]
 	end
 
-	# return [Integer] the count of elements
+	# iterate over the contents
+	# @yield [RFC7159::Value] element
+	def each &b
+		@array.each(&b)
+	end
+
+	# @return [Integer] the count of elements
 	def size
 		@array.size
 	end
@@ -86,6 +92,12 @@ class RFC7159::Array < RFC7159::Value
 	alias to_a   plain_old_ruby_object
 	alias to_ary plain_old_ruby_object
 
+	# JSON gem compat
+	# @return [::String] JSONified representation
+	def to_json
+		RFC7159::Dumper.new.dump self
+	end
+
 	# @return [::String] the array in string
 	def inspect
 		sprintf "#<%p:%#016x %p>", self.class, self.object_id << 1, @array
@@ -106,6 +118,7 @@ class RFC7159::Array < RFC7159::Value
 	# @private
 	def initialize ary
 		@array = ary
+		@array.freeze
 	end
 end
 

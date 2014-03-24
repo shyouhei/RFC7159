@@ -69,10 +69,12 @@ class RFC7159::Number < RFC7159::Value
 		return @to_d
 	end
 
-	# @return [String] the original string
+	# @return [::String] the original string
 	def to_s
 		return @to_s.dup # dup just in case.
 	end
+
+	alias to_json to_s
 
 	# @return [Float] conversion to float
 	def to_f

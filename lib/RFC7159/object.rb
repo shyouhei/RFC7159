@@ -49,19 +49,29 @@ class RFC7159::Object < RFC7159::Value
 		new assoc
 	end
 
-	# fetch the key
+	# fetch the key.
+	# @note   RFC7159 allows identical key to appear multiple times in an object.
 	# @note   This is O(1)
-	# @param  [String] key  key to look at
-	# @return [Value]       corresponding value
-	# @return [nil]         not found
+	# @param  [::String, String]  key  key to look at
+	# @return [ [Value] ]              corresponding value(s)
 	def [] key
-		@assoc.each do |(k, v)|
-			if k == key
-				return v
+		ret = @assoc.select do |(k, v)| k == key end
+		ret.map! do |(k, v)| v end
+		return ret
+	end
+
+	# iterates over the pairs.
+	# @yield [key, value] the pair.
+	def each_pair
+		e = Enumerator.new do |y|
+			@assoc.each do |a|
+				y << a
 			end
 		end
-		return nil
+		return block_given? ? e.each(&b) : e
 	end
+
+	alias each each_pair
 
 	# @raise  [RuntimeError]  keys conflict
 	# @return [::Hash]        converted object
@@ -113,6 +123,8 @@ class RFC7159::Object < RFC7159::Value
 	# @private
 	def initialize assoc
 		@assoc = assoc
+		@assoc.each {|i| i.freeze }
+		@assoc.freeze
 	end
 end
 

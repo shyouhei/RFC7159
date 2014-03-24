@@ -150,8 +150,9 @@ end
 	# text, otherwise an exception shall raise.
 	#
 	# @param  [#each_char] str    IO or String or something to parse
-	# @return [Array]             Parsed AST
+	# @return [::Array]           Parsed AST
 	# @raise  [Racc::ParseError]  The input is invalid
+	# @raise  [Encoding::CompatibilityError] The input is invalid
 	def parse str
 		@state      = :init
 		@enum       = str.enum_for:each_char

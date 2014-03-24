@@ -66,6 +66,16 @@ class RFC7159::String < RFC7159::Value
 		end
 	end
 
+	# @return [string] original string
+	def to_json
+		'"' << @orig.flatten.join('') << '"'
+	end
+
+	# String comparisons are defined in RFC7159 section 8.3.  We follow that.
+	def == other
+		self.to_str == other.to_str
+	end
+
 	private
 	private_class_method:new
 	# @private
@@ -136,6 +146,7 @@ class RFC7159::String < RFC7159::Value
 		end
 		path4 = path3.dup.force_encoding enc
 		@str  = path4.valid_encoding? ? path4 : path3
+		@str.freeze
 	end
 end
 

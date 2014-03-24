@@ -33,14 +33,17 @@
 
 require_relative 'RFC7159/parser'
 require_relative 'RFC7159/value'
+require_relative 'RFC7159/dumper'
 
 # This is a RFC7159-conforming JSON parser/generator.
 module RFC7159
 	# This is our Marshal.load -compat API
-	# @param  [String]      str    The input
-	# @param  [true, false] plain  Output to be plain-old ruby object, or not.
-	# @return [Object]             Evaluated plain-old ruby object
-	# @return [RFC7159::Value]     Evaluated JSON value object
+	# @param  [::String, IO]  str             The input
+	# @param  [true, false]   plain           Output to be plain-old ruby object, or not.
+	# @return [::Object]                      Evaluated plain-old ruby object
+	# @return [RFC7159::Value]                Evaluated JSON value object
+	# @raise  [Racc::ParseError]              The input is invalid
+	# @raise  [Encoding::CompatibilityError]  The input is invalid
 	def self.load str, plain: false
 		ast = RFC7159::Parser.new.parse str
 		obj = RFC7159::Value.from_ast ast
@@ -49,6 +52,19 @@ module RFC7159
 		else
 			return obj
 		end
+	end
+
+	# This is our Marshal.dump -compat API
+	# @param  [::Object]  obj   The input (should be JSONable)
+	# @param  [IO]        port  IO port to dump obj into
+	# @return [::String]        Dumped valid JSON text representation
+	# @return [port]            Indicates the output went to the port.
+	# @raise  [TypeEeepe]       obj not JSONable
+	# @raise  [Errno::ELOOP]    Cyclic relation(s) detected
+	def self.dump obj, port: ''.encode(Encoding::UTF_8)
+		bag = RFC7159::Dumper.new port
+		bag.start_dump obj
+		return port
 	end
 end
 
