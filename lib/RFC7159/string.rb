@@ -145,7 +145,8 @@ class RFC7159::String < RFC7159::Value
 			r << j.b
 		end
 		path4 = path3.dup.force_encoding enc
-		@str  = path4.valid_encoding? ? path4 : path3
+		# @str = path4.valid_encoding? ? path4 : path3
+		@str = path4
 		@str.freeze
 	end
 end
@@ -183,6 +184,28 @@ end
 # 2014.03.17.txt:21:15:04 <#ruby-ja@ircnet:nurse    > 例のOpenBSDのsignifyをportableにしたらRubyでも使えるかなぁ
 # 2014.03.17.txt:21:18:39 <#ruby-ja@ircnet:nurse    > ていうか卜部さんはJSONパーサでも書いてるのかしら
 # 2014.03.17.txt:21:18:56 <#ruby-ja@ircnet:nurse    > って、聞いちゃいけない質問な気がした
+# ----
+# 2014.03.25.txt:16:08:14 >#ruby-ja@ircnet:shyouhei < "\u{dead}" を入力されたときに "\\uDEAD" を出力する関数を作成せよ
+# 2014.03.25.txt:16:09:21 >#ruby-ja@ircnet:shyouhei < str.force_encoding('utf-8').scrub {|c| "\\u" + c.unpack('H*") } はだめぽい
+# 2014.03.25.txt:16:14:13 >#ruby-ja@ircnet:shyouhei < primitive_convertでなんとかなるのかこれ
+# 2014.03.25.txt:16:20:10 <#ruby-ja@ircnet:n0kada   > "\u{dead}"ってinvalidなんだっけ
+# 2014.03.25.txt:16:22:29 >#ruby-ja@ircnet:shyouhei < サロゲートペアのかたほう
+# 2014.03.25.txt:16:22:44 >#ruby-ja@ircnet:shyouhei < それだけではinvalidすね
+# 2014.03.25.txt:16:34:47 >#ruby-ja@ircnet:shyouhei < お、"\u{dead}".unpack('U*')で0xdeadが取得できる
+# 2014.03.25.txt:16:34:57 >#ruby-ja@ircnet:shyouhei < ここからなんとかすればいいのか…?
+# 2014.03.25.txt:16:35:00 >#ruby-ja@ircnet:shyouhei < しかしどうする
+# 2014.03.25.txt:16:35:08 <#ruby-ja@ircnet:akr      > "\u{dead}".unpack("U*").map {|c| 0xD800 <= c && c <= 0xDFFF ? "\\u%04X" % c : [c].pack("U") }.join
+# 2014.03.25.txt:16:38:16 >#ruby-ja@ircnet:shyouhei < おお。
+# 2014.03.25.txt:16:38:46 >#ruby-ja@ircnet:shyouhei < scrubでなんとかするのは筋が悪いことが分かりつつある
+# 2014.03.25.txt:16:39:36 >#ruby-ja@ircnet:shyouhei < まずは文字列じゃなくてコードポイントの配列にして、そこでごにょってから、さいごに文字列になおすのが色々正しい雰囲気を感じる
+# 2014.03.25.txt:16:39:53 <#ruby-ja@ircnet:akr      > encoding が壊れている時に、文字の範囲を確定するのは難しいので。
+# 2014.03.25.txt:16:43:08 <#ruby-ja@ircnet:n0kada   > unpackはサロゲートペアの片割れも扱える仕様なんだっけ
+# 2014.03.25.txt:16:43:41 <#ruby-ja@ircnet:akr      > 仕様かどうかは知らない
+# 2014.03.25.txt:16:44:36 <#ruby-ja@ircnet:akr      > 伝統的に寛大だったとは思う
+# 2014.03.25.txt:16:45:41 (#ruby-ja@ircnet:n0kada   ) $ grep -r surrogate spec/rubyspec/core/string/unpack/
+# 2014.03.25.txt:16:45:42 (#ruby-ja@ircnet:n0kada   ) bash: exit 1
+# 2014.03.25.txt:16:46:06 <#ruby-ja@ircnet:n0kada   > rubyspecが持ってないとは意外だな
+# 2014.03.25.txt:16:46:18 <#ruby-ja@ircnet:n0kada   > こういう重箱の隅はお得意だろうに
 
 # 
 # Local Variables:
