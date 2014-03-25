@@ -128,7 +128,7 @@ class RFC7159::Dumper
 
 	def try_convert obj
 		case obj
-		when RFC7159::Value, Hash, Array, String, Integer, Float, TrueClass, FalseClass, NilClass
+		when RFC7159::Value, Hash, Array, String, Integer, Float, BigDecimal, TrueClass, FalseClass, NilClass
 			return obj
 		else
 			begin

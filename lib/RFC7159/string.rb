@@ -67,13 +67,15 @@ class RFC7159::String < RFC7159::Value
 	end
 
 	# @return [string] original string
-	def to_json
+	def to_json *;
 		'"' << @orig.flatten.join('') << '"'
 	end
 
 	# String comparisons are defined in RFC7159 section 8.3.  We follow that.
 	def == other
 		self.to_str == other.to_str
+	rescue NoMethodError
+		return false
 	end
 
 	private

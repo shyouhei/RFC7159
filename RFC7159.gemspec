@@ -66,6 +66,11 @@ Gem::Specification.new do |spec|
 	spec.add_development_dependency 'simplecov', '>= 0'
 	spec.add_development_dependency 'racc',      '~> 1.4.11'
 	# racc runtime is inside ruby's stdlib so no runtime dependency.
+
+	# below are only for comparisons
+	spec.add_development_dependency 'json'      # 1.8.1 tested
+	spec.add_development_dependency 'yajl-ruby' # 1.2.0 tested
+	spec.add_development_dependency 'oj'        # 2.6.1 tested
 end
 
 # 

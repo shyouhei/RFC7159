@@ -38,57 +38,223 @@ describe RFC7159 do
 	this_dir = Pathname.new __dir__
 
 	describe '.load' do
-		context 'acceptance' do
-			context 'valid' do
-				the_dir = this_dir + 'acceptance/valid'
-				the_dir.find do |f|
-					case f.extname when '.json'
-						it "should be valid: #{f.basename}" do
-							expect do
-								f.open 'r:utf-8' do |fp|
-									RFC7159.load fp
-								end
-							end.to_not raise_exception
+		the_dir = this_dir + 'acceptance/valid'
+		the_dir.find do |f|
+			case f.extname when '.json'
+				it "should accept: #{f.basename}" do
+					expect do
+						f.open 'r:utf-8' do |fp|
+							RFC7159.load fp
 						end
-					end
+					end.to_not raise_exception
 				end
 			end
+		end
 
-			context 'invalid' do
-				the_dir = this_dir + 'acceptance/invalid'
-				the_dir.find do |f|
-					case f.extname when '.txt'
-						it "should be invalid: #{f.basename}" do
-							expect do
-								f.open 'r:utf-8' do |fp|
-									RFC7159.load fp
-								end
-							end.to raise_exception
+		the_dir = this_dir + 'acceptance/invalid'
+		the_dir.find do |f|
+			case f.extname when '.txt'
+				it "should reject: #{f.basename}" do
+					expect do
+						f.open 'r:utf-8' do |fp|
+							RFC7159.load fp
 						end
-					end
+					end.to raise_exception
 				end
 			end
 		end
 	end
 
 	describe '.dump' do
-		context 'round-tripness' do
-			the_dir = this_dir + 'acceptance/valid'
-			the_dir.find do |f|
-				case f.extname when '.json'
+		the_dir = this_dir + 'acceptance/valid'
+		the_dir.find do |f|
+			case f.extname when '.json'
+				it "should round-trip: #{f.basename}" do
+					str1 = f.open 'r:utf-8' do |fp| fp.read end
+					obj  = RFC7159.load str1
+					str2 = RFC7159.dump obj
+					# not interested in indents
+					expect(str2.gsub(/\s+/, '')).to eq(str1.gsub(/\s+/, ''))
+				end
+			end
+		end
+
+		context 'from something outside JSON world' do
+			{
+				false             => 'false',
+				true              => 'true',
+				nil               => 'null',
+				0                 => '0',
+				0.5               => '0.5', # 0.5 has no error
+				'foo'             => '"foo"',
+				"\u{dead}"        => '"\\uDEAD"', # invalid UTF8 to be valid escaped UTF8
+				[]                => '[]',
+				[0]               => '[0]',
+				{}                => '{}',
+				{'1'=>1}          => '{"1":1}',
+				{''=>''}          => '{"":""}',
+				(0.0/0.0)         => false,
+				(1.0/0.0)         => false,
+				BigDecimal("NaN") => false,
+				//                => false,
+				0..1              => false,
+				{{}=>{}}          => false,
+				{[]=>[]}          => false,
+				{1=>1}            => false,
+				{nil=>nil}        => false,
+				Object.new        => false,
+				Class.new         => false,
+				Proc.new {}       => false,
+			}.each_pair do |src, expected|
+				if expected
+					it { expect(RFC7159.dump src).to eq(expected) }
+				else
+					it { expect{RFC7159.dump src}.to raise_exception }
+				end
+			end
+		end
+	end
+
+	context 'versus' do
+		the_dir     = this_dir + 'acceptance/valid'
+		the_targets = Array.new
+		the_dir.find do |f|
+			case f.extname when '.json'
+				begin
+					f.open 'r:utf-8' do |fp|
+						RFC7159.load fp, plain:true
+					end
+				rescue RuntimeError
+					# there are cases JSON can't be represented in PORO
+					# we ignore them here.
+				else
+					the_targets.push f
+				end
+			end
+		end
+		the_dir      = this_dir + 'acceptance/invalid'
+		the_invalids = Array.new
+		the_dir.find do |f|
+			case f.extname when '.txt'
+				the_invalids.push f
+			end
+		end
+
+		require 'json'
+		require 'oj'
+		require 'yajl'
+		targets = {
+			JSON => {
+				load: -> str {
+					JSON.parse str
+				},
+				dump: -> obj {
+					begin
+						ret = JSON.generate obj
+					rescue
+						raise "JSON (not us) failed: #{$!.inspect}"
+					else
+						unless ret.valid_encoding?
+							raise "JSON (not us) is broken: generated #{ret.dump}"
+						end
+						return ret
+					end
+				},
+			},
+
+			Oj   => {
+				load: -> str {
+					Oj.load str
+				},
+				dump: -> obj {
+					begin
+						ret = Oj.dump obj
+					rescue
+						raise "Oj (not us) failed: #{$!.inspect}"
+					else
+						unless ret.valid_encoding?
+							raise "Oj (not us) is broken: generated #{ret.dump}"
+						end
+						return ret
+					end
+				},
+			},
+
+			Yajl => {
+				load: -> str {
+					Yajl::Parser.parse str, allow_comments: false, symbolize_keys: false
+				},
+				dump: -> obj {
+					begin
+						ret = Yajl::Encoder.encode obj
+					rescue
+						raise "Yajl (not us) failed: #{$!.inspect}"
+					else
+						unless ret.valid_encoding?
+							raise "Yajl (not us) is broken: generated #{ret.dump}"
+						end
+						return ret
+					end
+				},
+			},
+		}
+
+		targets.each_pair do |klass, howto|
+			describe klass do
+				the_invalids.each do |f|
+					it "should reject: #{f.basename}" do
+						begin
+							theirs = f.open 'r:utf-8' do |fp|
+								howto[:load].(fp.read)
+							end
+						rescue
+							# ok
+						else
+							pending "#{klass} (not us) failed to reject: #{theirs.inspect}"
+						end
+					end
+				end
+
+				the_targets.each do |f|
 					context f.basename do
 						before :all do
-							@str = f.open 'r:utf-8' do |fp| fp.read end
-							@obj = RFC7159.load @str
+							str   = f.open 'r:utf-8' do |fp| fp.read end
+							@ours = RFC7159.load str, plain: true
+							begin
+								@theirs = howto[:load].(str)
+							rescue
+								pending "#{klass} (not us) failed to accept: #{$!.inspect}"
+							end
+							# JSON.load sometimes generates Infinity and that's not JSONable
+							case @theirs when Array
+								case @theirs[0] when Float
+									if @theirs[0].infinite?
+										pending "#{klass} (not us) generates non-JSONables: #{@theirs.inspect}"
+									end
+								end
+							end
 						end
 
-						subject do
-							RFC7159.dump @obj
+						it "compare load" do
+							if @ours != @theirs
+								pending "They load differently: \n#{@ours.inspect} versus \n#{@theirs.inspect}"
+							end
 						end
 
-						it "should round-trip" do
-							# not interested in indents
-							expect(subject.gsub(/\s+/, '')).to eq(@str.gsub(/\s+/, ''))
+						it "compare dump ours" do
+							ours   = RFC7159.dump @ours
+							theirs = howto[:dump].(@ours) rescue pending($!.message)
+							if ours.gsub(/\s+/, '') != theirs.gsub(/\s+/, '')
+								pending "They dump differently: \n#{ours.dump} versus \n#{theirs.dump}"
+							end
+						end
+
+						it "compare dump theirs" do
+							ours   = RFC7159.dump @theirs
+							theirs = (howto[:dump].(@theirs) rescue pending($!.message))
+							if ours.gsub(/\s+/, '') != theirs.gsub(/\s+/, '')
+								pending "They dump differently: \n#{ours.dump} versus \n#{theirs.dump}"
+							end
 						end
 					end
 				end

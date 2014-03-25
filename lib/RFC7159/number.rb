@@ -57,7 +57,7 @@ class RFC7159::Number < RFC7159::Value
 	# @note  this conversion  might  lose  precision.  Use  `to_d`  if you  want
 	#   something that fully represents this number.
 	def plain_old_ruby_object
-		if integer?
+		if /\A[+-]?\d+\z/ =~ @to_s
 			return to_i
 		else
 			return to_f
@@ -74,7 +74,11 @@ class RFC7159::Number < RFC7159::Value
 		return @to_s.dup # dup just in case.
 	end
 
-	alias to_json to_s
+	# JSON gem compat
+	# @return [::String] the original string
+	def to_json *;
+		return to_s
+	end
 
 	# @return [Float] conversion to float
 	def to_f
@@ -117,14 +121,6 @@ class RFC7159::Number < RFC7159::Value
 	end
 
 	private
-
-	# This is tricky.  For instance "1.2e+3"  is 1200, which is totally valid as
-	# being an integer.
-	def integer?
-		i = to_d
-		j = to_i
-		return i == j
-	end
 
 	private_class_method:new
 	# @private
