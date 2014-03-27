@@ -62,6 +62,9 @@ end
 desc "a la rails console"
 task :console do
 	require_relative 'lib/RFC7159'
+	require 'json'
+	require 'yajl'
+	require 'oj'
 	require 'irb'
 	require 'irb/completion'
 	ARGV.clear
