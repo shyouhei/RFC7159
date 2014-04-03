@@ -31,8 +31,20 @@
 # ARISING IN ANY  WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF  ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-source 'https://rubygems.org'
-gemspec
+begin
+	source 'https://rubygems.org'
+	gemspec
+
+rescue Bundler::GemspecError
+	# HACK: in order to use bundler we need a valid gemspec, and a valid gemspec
+	# needs a  valid parser.rb.  A  valid parser.rb  needs racc, and  racc needs
+	# bundler.  So there is a circular dependency.  We have to workaround.
+
+	require 'fileutils'
+	FileUtils.touch 'lib/RFC7159/parser.rb', mtime: 0
+	gemspec
+end
+
 
 # 
 # Local Variables:

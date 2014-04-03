@@ -34,8 +34,8 @@
 require 'rubygems'
 require 'bundler'
 require 'rake'
-require "bundler/gem_tasks"
 begin
+	require "bundler/gem_tasks"
 	Bundler.setup(:default, :development)
 rescue Bundler::BundlerError => e
 	$stderr.puts e.message

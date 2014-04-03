@@ -31,12 +31,12 @@
 # ARISING IN ANY  WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF  ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-require_relative 'RFC7159/parser'
-require_relative 'RFC7159/value'
-require_relative 'RFC7159/dumper'
-
 # This is a RFC7159-conforming JSON parser/generator.
 module RFC7159
+	require_relative 'RFC7159/parser'
+	require_relative 'RFC7159/value'
+	require_relative 'RFC7159/dumper'
+
 	# This is our Marshal.load -compat API
 	# @param  [::String, IO]  str             The input
 	# @param  [true, false]   plain           Output to be plain-old ruby object, or not.
