@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
 	spec.authors       = %w'Urabe, Shyouhei'
 	spec.email         = %w'shyouhei@ruby-lang.org'
 	spec.summary       = 'RFC7159 parser / generator'
-	spec.description   = <<-'end'.gsub /\n\s*/, ''
+	spec.description   = <<-'end'.gsub(/[\n\s]+/, ' ').strip
 		A  JSON  parser/generator  that  conforms  (I believe)  to  RFC7159  "The
 		JavaScript Object Notation (JSON)  Data Interchange Format".  That RFC is
 		very  different to  its predecessor  RFC4627, when  it comes  to parsing.
@@ -57,7 +57,7 @@ Gem::Specification.new do |spec|
 	spec.test_files    = spec.files.grep(%r{^spec/})
 	spec.require_paths = %w'lib'
 
-	spec.required_ruby_version = '~> 2.1' # String#scrub used
+	spec.required_ruby_version = '~> 2.0'
 	spec.add_development_dependency 'bundler',   '~> 1.5'
 	spec.add_development_dependency 'rake',      '~> 10.1'
 	spec.add_development_dependency 'rdoc',      '~> 4.0'
