@@ -86,8 +86,8 @@ class RFC7159::String < RFC7159::Value
 		enc   = ary[0][0].encoding rescue Encoding::US_ASCII # empty string
 		path1 = ary.map do |i|
 			case i when Array
-				# ['\\', ['u', 'F', 'F', 'E', 'E']] or something
-				case i[1]
+				# ['\\', 'u', 'F', 'F', 'E', 'E'] or something
+				case i[1].encode(Encoding::US_ASCII)
 				when "\x22" then 0x0022 # "    quotation mark  U+0022
 				when "\x5C" then 0x005C # \    reverse solidus U+005C
 				when "\x2F" then 0x002F # /    solidus         U+002F
@@ -96,8 +96,8 @@ class RFC7159::String < RFC7159::Value
 				when "\x6E" then 0x000A # n    line feed       U+000A
 				when "\x72" then 0x000D # r    carriage return U+000D
 				when "\x74" then 0x0009 # t    tab             U+0009
-				else                    # uXXXX                U+XXXX
-					i[1][1..4].join.to_i 16
+				else "\x75"             # uXXXX                U+XXXX
+					i[2..5].join.encode(Encoding::US_ASCII).to_i 16
 				end
 			else
 				i.ord

@@ -116,7 +116,7 @@ class RFC7159::Parser
 	                | quotation_mark __chars__ quotation_mark   { [ :string, *val[1] ] }
 	__chars__       : char                                      { val }
 	                | __chars__ char                            { [ *val[0],  val[1] ] }
-	char            : unescaped | escape __ctrl__               { val }
+	char            : unescaped | escape __ctrl__               { val.flatten }
 	__ctrl__        : "\x22" # "    quotation mark  U+0022
 	                | "\x5C" # \    reverse solidus U+005C
 	                | "\x2F" # /    solidus         U+002F
