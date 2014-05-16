@@ -160,7 +160,7 @@ end
 		@lineno     = 1
 		@column     = 1
 
-		case enc = firstchar.encoding
+		case @enc = firstchar.encoding
 		when Encoding::UTF_8,
 		     Encoding::US_ASCII, # true subset of UTF-8
 		     Encoding::UTF8_MAC, # true subset of UTF-8
@@ -180,7 +180,7 @@ end
 			# generate JSON texts with BOMs but _allows_ to accept.
 			#
 			# This parser can control whether to accept BOMs.
-			if @accept_bom and firstchar == "\u{feff}".encode(enc)
+			if @accept_bom and firstchar == "\u{feff}".encode(@enc)
 				@enum.next # consume
 			end
 			return do_parse
@@ -188,16 +188,28 @@ end
 			raise Encoding::CompatibilityError, <<-"end".gsub(/[\n\s]+/, ' ')
 				``JSON text  SHALL be encoded  in UTF-8, UTF-16, or  UTF-32'', said
 				RFC7159  section 8.1.   The given  string is  NOT in  any of  those
-				encodings (but #{enc.inspect}).
+				encodings (but #{@enc.inspect}).
 			end
 		end
 	end
 
 	private
+	def nl
+		@nl ||= Regexp.new('[\r\n]'.encode(@enc))
+	end
+
+	def sp
+		@nl ||= Regexp.new('\s'.encode(@enc))
+	end
+
+	def nm
+		@nl ||= Regexp.new('\d'.encode(@enc))
+	end
+
 	def next_token
 		chr = @enum.next
-		tok = chr # dfault
-		newline, @newline = @newline, /[\r\n]/.match(chr)
+		tok = chr.encode(Encoding::UTF_8) # dfault
+		newline, @newline = @newline, nl.match(chr)
 		if newline
 			@lineno += 1
 			@column = 1
@@ -214,8 +226,8 @@ end
 			when 0x5D..0x10FFFF then    tok = :unescaped
 			else                     @state = :string    # NG unicode
 			end
-		when :init    then @state = (chr == '"') ? :string : :init
-		when :escaped then @state = (chr == 'u') ? :u1     : :string
+		when :init    then @state = (chr.ord == '"'.ord) ? :string : :init
+		when :escaped then @state = (chr.ord == 'u'.ord) ? :u1     : :string
 		when :u1      then @state = :u2
 		when :u2      then @state = :u3
 		when :u3      then @state = :u4
@@ -240,16 +252,16 @@ end
 				'possible extra (dangling) comma?'
 			when ':'
 				'possible confusion of {} vs []?'
-			when /\s/
+			when sp
 				'possible space inside of a number?'
-			when /\d/
+			when nm
 				'possible lack of +/- in exponent?'
 			else
 				'unexpected character'
 			end
 		end
-		msg = sprintf 'Syntax error near line %d, char %d (%p): %s',
-			@lineno, @column, val, reason
+		msg = sprintf 'Syntax error near line %d, char %d (%p) @ %p: %s',
+			@lineno, @column, val, @enum, reason
 		raise Racc::ParseError, msg
 	end
 
