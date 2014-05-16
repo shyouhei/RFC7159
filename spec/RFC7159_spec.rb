@@ -134,7 +134,7 @@ describe RFC7159 do
 		end
 	end
 
-	context 'versus' do
+	context 'versus', skip: true do
 		the_dir     = this_dir + 'acceptance/valid'
 		the_targets = Array.new
 		the_dir.find do |f|
