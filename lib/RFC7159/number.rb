@@ -131,7 +131,7 @@ class RFC7159::Number < RFC7159::Value
 		@exp  = exp  && exp.join  # nil, or 'e+ddd..'
 
 		# pre-cache common computations
-		@to_s = sprintf "%s%s%s%s", @sign, @int, @frac, @exp
+		@to_s = [@sign, @int, @frac, @exp].join.encode(Encoding::US_ASCII) # this must be OK
 		@to_s.freeze # just in case
 		@to_d = BigDecimal.new @to_s
 	end
