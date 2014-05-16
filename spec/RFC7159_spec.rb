@@ -74,15 +74,24 @@ describe RFC7159 do
 	end
 
 	describe '.dump' do
-		the_dir = this_dir + 'acceptance/valid'
-		the_dir.find do |f|
-			case f.extname when '.json'
-				it "should round-trip: #{f.basename}" do
-					str1 = f.open 'r:utf-8' do |fp| fp.read end
-					obj  = RFC7159.load str1
-					str2 = RFC7159.dump obj
-					# not interested in indents
-					expect(str2.gsub(/\s+/, '')).to eq(str1.gsub(/\s+/, ''))
+		[
+		 Encoding::UTF_8,
+		 Encoding::UTF_16BE,
+		 Encoding::UTF_16LE,
+		 Encoding::UTF_32BE,
+		 Encoding::UTF_32LE,
+		].each do |enc|
+			the_dir = this_dir + 'acceptance/valid'
+			the_dir.find do |f|
+				case f.extname when '.json'
+				it "should round-trip in #{enc}: #{f.basename}" do
+						str1 = f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp| fp.read end
+						obj  = RFC7159.load str1
+						str2 = RFC7159.dump obj
+						str3 = str1.encode(Encoding::UTF_8)
+						# not interested in indents
+						expect(str2.gsub(/\s+/, '')).to eq(str3.gsub(/\s+/, ''))
+					end
 				end
 			end
 		end
@@ -96,6 +105,8 @@ describe RFC7159 do
 				0.5               => '0.5', # 0.5 has no error
 				'foo'             => '"foo"',
 				"\u{dead}"        => '"\\uDEAD"', # invalid UTF8 to be valid escaped UTF8
+				'foo'.encode('utf-32le')              => '"foo"',
+				"\xDE\xAD".force_encoding('utf-16be') => '"\\uDEAD"',
 				[]                => '[]',
 				[0]               => '[0]',
 				{}                => '{}',

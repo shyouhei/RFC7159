@@ -68,7 +68,10 @@ class RFC7159::String < RFC7159::Value
 
 	# @return [string] original string
 	def to_json *;
-		'"' << @orig.flatten.join('') << '"'
+		# Here '"', which  is UTF-8, and @orig, which might  be UTF-16, should be
+		# aligned.  We  take UTF-8  because we are  not interested  in generating
+		# UTF-16 JSON and so on.
+		'"' << @orig.flatten.join('').encode(Encoding::UTF_8) << '"'
 	end
 
 	# String comparisons are defined in RFC7159 section 8.3.  We follow that.
