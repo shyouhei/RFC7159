@@ -162,7 +162,7 @@ class RFC7159::Dumper
 			# fast path
 			if str.valid_encoding?
 				str2 = str.encode Encoding::UTF_8
-				buf  = str.unpack('U*')
+				buf  = str2.unpack('U*')
 			end
 		rescue Encoding::UndefinedConversionError
 			# str might be invalid, but that's OK as per RFC7159 section 8.2.

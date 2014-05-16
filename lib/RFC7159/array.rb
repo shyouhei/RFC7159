@@ -76,7 +76,7 @@ class RFC7159::Array < RFC7159::Value
 		return false unless length == other.length
 		@array.each_index do |i|
 			j = @array[i]
-			k = @other[i]
+			k =  other[i]
 			return false unless j == k
 		end
 		return true
