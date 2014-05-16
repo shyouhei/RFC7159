@@ -34,7 +34,7 @@
 require_relative '../RFC7159'
 
 # The version
-RFC7159::VERSION = 7159
+RFC7159::VERSION = 7159.01
 
 # 
 # Local Variables:
