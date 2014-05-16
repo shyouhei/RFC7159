@@ -38,28 +38,36 @@ describe RFC7159 do
 	this_dir = Pathname.new __dir__
 
 	describe '.load' do
-		the_dir = this_dir + 'acceptance/valid'
-		the_dir.find do |f|
-			case f.extname when '.json'
-				it "should accept: #{f.basename}" do
-					expect do
-						f.open 'r:utf-8' do |fp|
-							RFC7159.load fp
-						end
-					end.to_not raise_exception
+		[
+		 Encoding::UTF_8,
+		 Encoding::UTF_16BE,
+		 Encoding::UTF_16LE,
+		 Encoding::UTF_32BE,
+		 Encoding::UTF_32LE,
+		].each do |enc|
+			the_dir = this_dir + 'acceptance/valid'
+			the_dir.find do |f|
+				case f.extname when '.json'
+					it "should accept: #{enc}-encoded #{f.basename}" do
+						expect do
+							f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp|
+								RFC7159.load fp
+							end
+						end.to_not raise_exception
+					end
 				end
 			end
-		end
 
-		the_dir = this_dir + 'acceptance/invalid'
-		the_dir.find do |f|
-			case f.extname when '.txt'
-				it "should reject: #{f.basename}" do
-					expect do
-						f.open 'r:utf-8' do |fp|
-							RFC7159.load fp
-						end
-					end.to raise_exception
+			the_dir = this_dir + 'acceptance/invalid'
+			the_dir.find do |f|
+				case f.extname when '.txt'
+					it "should reject: #{enc}-encoded #{f.basename}" do
+						expect do
+							f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp|
+								RFC7159.load fp
+							end
+						end.to raise_exception
+					end
 				end
 			end
 		end
