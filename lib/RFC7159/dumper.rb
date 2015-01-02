@@ -64,8 +64,7 @@ class RFC7159::Dumper
 			ensure_unique obj2
 			@pp.group 1, '[', ']' do
 				obj2.each.with_index do |i, j|
-					@pp.text ',' if j > 0
-					@pp.breakable ''
+					@pp.text ', ' if j > 0
 					dump i
 				end
 			end
@@ -73,15 +72,14 @@ class RFC7159::Dumper
 			ensure_unique obj2
 			@pp.group 1, '{', '}' do
 				obj2.each_pair.with_index do |(i, j), k|
-					@pp.text ',' if k > 0
-					@pp.breakable ''
+					@pp.text ', ' if k > 0
 					case i
 					when ::String, RFC7159::String
 						dump i
 					else
 						dump i.to_str # should raise for non-string-ish
 					end
-					@pp.text ':'
+					@pp.text ': '
 					dump j
 				end
 			end

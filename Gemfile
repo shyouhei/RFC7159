@@ -33,7 +33,7 @@
 
 begin
 	source 'https://rubygems.org'
-	gemspec
+	gemspec require: false
 
 rescue Bundler::GemspecError
 	# HACK: in order to use bundler we need a valid gemspec, and a valid gemspec

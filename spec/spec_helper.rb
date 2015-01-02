@@ -33,6 +33,7 @@
 
 ENV['RACK_ENV'] = 'test'
 require 'bundler/setup'
+require 'rspec'
 require 'simplecov'
 
 RSpec.configure do |c|
