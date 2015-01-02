@@ -38,10 +38,11 @@ require 'prettyprint'
 class RFC7159::Dumper
 
 	# @param [#<<]  port  output destination
-	def initialize port
-		@port = port
-		@bag  = Hash.new
-		@pp   = PrettyPrint.new @port
+	def initialize port, indent = 4
+		@port   = port
+		@bag    = Hash.new
+		@indent = indent
+		@pp     = PrettyPrint.new @port
 		@bag.compare_by_identity
 	end
 
@@ -61,27 +62,19 @@ class RFC7159::Dumper
 		obj2 = try_convert obj
 		case obj2
 		when ::Array, RFC7159::Array then
-			ensure_unique obj2
-			@pp.group 1, '[', ']' do
-				obj2.each.with_index do |i, j|
-					@pp.text ', ' if j > 0
-					dump i
-				end
+			js_group obj2, :each, '[', ']' do |i|
+				dump i
 			end
 		when ::Hash, RFC7159::Object then
-			ensure_unique obj2
-			@pp.group 1, '{', '}' do
-				obj2.each_pair.with_index do |(i, j), k|
-					@pp.text ', ' if k > 0
-					case i
-					when ::String, RFC7159::String
-						dump i
-					else
-						dump i.to_str # should raise for non-string-ish
-					end
-					@pp.text ': '
-					dump j
+			js_group obj2, :each_pair, '{', '}' do |(i, j)|
+				case i
+				when ::String, RFC7159::String
+					dump i
+				else
+					dump i.to_str # should raise for non-string-ish
 				end
+				@pp.text ': '
+				dump j
 			end
 		when RFC7159::Value then
 			obj3 = obj2.to_json
@@ -122,6 +115,26 @@ class RFC7159::Dumper
 		else
 			@bag.store obj, obj
 		end
+	end
+
+	# much like PP#object_group, except that it indents like JSON.
+	def js_group obj, method, open, close
+		ensure_unique obj
+		enum = obj.send method
+		@pp.text open
+		@pp.group_sub do
+			@pp.nest @indent do
+				enum.with_index do |a, i|
+					 if i > 0
+						 @pp.text ','
+					 end
+					@pp.breakable ' '
+					yield a
+				end
+			end
+			@pp.breakable ' '
+		end
+		@pp.text close
 	end
 
 	def try_convert obj
