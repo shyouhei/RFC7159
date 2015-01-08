@@ -55,8 +55,8 @@ class RFC7159::Object < RFC7159::Value
 	# @param  [::String, String]  key  key to look at
 	# @return [ [Value] ]              corresponding value(s)
 	def [] key
-		ret = @assoc.select do |(k, v)| k == key end
-		ret.map! do |(k, v)| v end
+		ret = @assoc.select do |(k, _)| k == key end
+		ret.map! do |(_, v)| v end
 		return ret
 	end
 
