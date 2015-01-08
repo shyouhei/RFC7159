@@ -99,8 +99,10 @@ class RFC7159::String < RFC7159::Value
 				when "\x6E" then 0x000A # n    line feed       U+000A
 				when "\x72" then 0x000D # r    carriage return U+000D
 				when "\x74" then 0x0009 # t    tab             U+0009
-				else "\x75"             # uXXXX                U+XXXX
+				when "\x75" then        # uXXXX U+XXXX
 					i[2..5].join.encode(Encoding::US_ASCII).to_i 16
+				else
+					raise "invalid escape: #{i.inspect}"
 				end
 			else
 				i.ord
