@@ -38,11 +38,11 @@ require 'prettyprint'
 class RFC7159::Dumper
 
 	# @param [#<<]  port  output destination
-	def initialize port, indent = 4
+	def initialize port, indent = 4, width = 79
 		@port   = port
 		@bag    = Hash.new
 		@indent = indent
-		@pp     = PrettyPrint.new @port
+		@pp     = PrettyPrint.new @port, width
 		@bag.compare_by_identity
 	end
 
@@ -62,11 +62,11 @@ class RFC7159::Dumper
 		obj2 = try_convert obj
 		case obj2
 		when ::Array, RFC7159::Array then
-			js_group obj2, :each, '[', ']' do |i|
+			kandr obj2, :each, '[', ']' do |i|
 				dump i
 			end
 		when ::Hash, RFC7159::Object then
-			js_group obj2, :each_pair, '{', '}' do |(i, j)|
+			kandr obj2, :each_pair, '{', '}' do |(i, j)|
 				case i
 				when ::String, RFC7159::String
 					dump i
@@ -113,28 +113,34 @@ class RFC7159::Dumper
 		if @bag.include? obj and not obj2.empty?
 			raise Errno::ELOOP, "target appears twice: #{target.inspect}"
 		else
-			@bag.store obj, obj
+			begin
+				@bag.store obj, obj
+				yield
+			ensure
+				@bag.delete obj
+			end
 		end
 	end
 
-	# much like PP#object_group, except that it indents like JSON.
-	def js_group obj, method, open, close
-		ensure_unique obj
-		enum = obj.send method
-		@pp.text open
-		@pp.group_sub do
-			@pp.nest @indent do
-				enum.with_index do |a, i|
-					 if i > 0
-						 @pp.text ','
-					 end
-					@pp.breakable ' '
-					yield a
+	# much like PP#object_group, except that it indents like K&R.
+	def kandr obj, method, open, close
+		ensure_unique obj do
+			enum = obj.send method
+			@pp.text open
+			@pp.group_sub do
+				@pp.nest @indent do
+					enum.with_index do |a, i|
+						if i > 0
+							@pp.text ','
+						end
+						@pp.breakable ' '
+						yield a
+					end
 				end
+				@pp.breakable ' '
 			end
-			@pp.breakable ' '
+			@pp.text close
 		end
-		@pp.text close
 	end
 
 	def try_convert obj

@@ -55,14 +55,16 @@ module RFC7159
 	end
 
 	# This is our Marshal.dump -compat API
-	# @param  [::Object]  obj   The input (should be JSONable)
-	# @param  [IO]        port  IO port to dump obj into
-	# @return [::String]        Dumped valid JSON text representation
-	# @return [port]            Indicates the output went to the port.
-	# @raise  [TypeEeepe]       obj not JSONable
-	# @raise  [Errno::ELOOP]    Cyclic relation(s) detected
-	def self.dump obj, port: ''.encode(Encoding::UTF_8)
-		bag = RFC7159::Dumper.new port
+	# @param  [::Object]  obj    The input (should be JSONable)
+	# @param  [IO]        port   IO port to dump obj into
+	# @param  [Fixnum]    indent indent depth
+	# @param  [Numeric]   width  page width (see {::PP})
+	# @return [::String]         Dumped valid JSON text representation
+	# @return [port]             Indicates the output went to the port.
+	# @raise  [TypeEeepe]        obj not JSONable
+	# @raise  [Errno::ELOOP]     Cyclic relation(s) detected
+	def self.dump obj, port: ''.encode(Encoding::UTF_8), indent: 4, width: Math.atanh(1)
+		bag = RFC7159::Dumper.new port, indent, width
 		bag.start_dump obj
 		return port
 	end
