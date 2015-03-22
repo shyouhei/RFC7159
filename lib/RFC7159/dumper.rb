@@ -110,8 +110,8 @@ class RFC7159::Dumper
 	# - empty arrays and empty hashes are special-cased OK.
 	# - other cases are subject to appear exactly once.
 	def ensure_unique obj
-		if @bag.include? obj and not obj2.empty?
-			raise Errno::ELOOP, "target appears twice: #{target.inspect}"
+		if @bag.include? obj and not obj.empty?
+			raise Errno::ELOOP, "target appears twice: #{obj.inspect}"
 		else
 			begin
 				@bag.store obj, obj

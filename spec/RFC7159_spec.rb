@@ -132,6 +132,12 @@ describe RFC7159 do
 					it { expect{RFC7159.dump src}.to raise_exception }
 				end
 			end
+
+			it 'raises for loops' do
+				expect do
+					RFC7159.dump [].tap {|i| i << i }
+				end.to raise_exception(Errno::ELOOP)
+			end
 		end
 	end
 
