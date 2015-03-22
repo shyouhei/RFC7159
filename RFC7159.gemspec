@@ -33,11 +33,17 @@
 
 # coding: utf-8
 
-require_relative 'lib/RFC7159/version'
+# hack avoid namespace pollution
+path      = File.expand_path 'lib/RFC7159/version.rb', __dir__
+content   = File.read path
+version   = Module.new.module_eval <<-'end'
+  RFC7159 = Module.new
+  eval content, binding, path
+end
 
 Gem::Specification.new do |spec|
 	spec.name          = 'RFC7159'
-	spec.version       = RFC7159::VERSION
+	spec.version       = version
 	spec.authors       = %w'Urabe, Shyouhei'
 	spec.email         = %w'shyouhei@ruby-lang.org'
 	spec.summary       = 'RFC7159 parser / generator'

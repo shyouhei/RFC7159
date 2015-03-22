@@ -41,6 +41,7 @@ RSpec.configure do |c|
 end
 
 SimpleCov.start do
+	add_filter 'lib/RFC7159/parser.rb'
 	add_filter 'vendor/'
 	add_filter 'spec/'
 end
