@@ -104,6 +104,7 @@ describe RFC7159 do
 				0                 => '0',
 				0.5               => '0.5', # 0.5 has no error
 				'foo'             => '"foo"',
+				"\"\\\/\b\f\n\r\t"=> '"\"\\\/\b\f\n\r\t"',
 				"\u{dead}"        => '"\\uDEAD"', # invalid UTF8 to be valid escaped UTF8
 				'foo'.encode('utf-32le')              => '"foo"',
 				"\xDE\xAD".force_encoding('utf-16be') => '"\\uDEAD"',
