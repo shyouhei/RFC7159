@@ -61,7 +61,7 @@ class RFC7159::String < RFC7159::Value
 	def pretty_print pp
 		hdr = sprintf '#<%p:%#016x', self.class, self.object_id << 1
 		pp.group 1, hdr, '>' do
-			pp.breakable
+			pp.text ' '
 			@str.pretty_print pp
 		end
 	end

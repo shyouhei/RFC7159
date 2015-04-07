@@ -108,8 +108,10 @@ class RFC7159::Array < RFC7159::Value
 	def pretty_print pp
 		hdr = sprintf '#<%p:%#016x', self.class, self.object_id << 1
 		pp.group 1, hdr, '>' do
-			pp.breakable
-			@array.pretty_print pp
+			pp.text ' '
+			RFC7159::Dumper.kandr pp, 1, @array.each, '[', ']' do |i|
+				i.pretty_print pp
+			end
 		end
 	end
 

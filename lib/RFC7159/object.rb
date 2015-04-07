@@ -62,7 +62,7 @@ class RFC7159::Object < RFC7159::Value
 
 	# iterates over the pairs.
 	# @yield [key, value] the pair.
-	def each_pair
+	def each_pair &b
 		e = Enumerator.new do |y|
 			@assoc.each do |a|
 				y << a
@@ -106,14 +106,11 @@ class RFC7159::Object < RFC7159::Value
 	def pretty_print pp
 		hdr = sprintf '#<%p:%#016x', self.class, self.object_id << 1
 		pp.group 1, hdr, '>' do
-			pp.breakable
-			pp.group 1, '{', '}' do
-				@assoc.each_with_index do |(k, v), i|
-					pp.breakable ',' if i.nonzero?
-					k.to_s.pretty_print pp
-					pp.text ': '
-					v.pretty_print pp
-				end
+			pp.text ' '
+			RFC7159::Dumper.kandr pp, 1, @assoc.each, '{', '}' do |(i, j)|
+				i.pretty_print pp
+				pp.text ': '
+				j.pretty_print pp
 			end
 		end
 	end

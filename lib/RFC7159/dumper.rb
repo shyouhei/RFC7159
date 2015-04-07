@@ -37,6 +37,24 @@ require 'prettyprint'
 # Dumps ruby object into JSON string
 class RFC7159::Dumper
 
+	# much like PP#object_group, except that it indents like K&R.
+	def self.kandr pp, indent, enum, open, close
+		pp.text open
+		pp.group_sub do
+			pp.nest indent do
+				enum.with_index do |a, i|
+					if i > 0
+						pp.text ','
+					end
+					pp.breakable ' '
+					yield a
+				end
+			end
+			pp.breakable ' '
+		end
+		pp.text close
+	end
+
 	# @param [#<<]  port  output destination
 	def initialize port, indent = 4, width = 79
 		@port   = port
@@ -125,21 +143,10 @@ class RFC7159::Dumper
 	# much like PP#object_group, except that it indents like K&R.
 	def kandr obj, method, open, close
 		ensure_unique obj do
-			enum = obj.send method
-			@pp.text open
-			@pp.group_sub do
-				@pp.nest @indent do
-					enum.with_index do |a, i|
-						if i > 0
-							@pp.text ','
-						end
-						@pp.breakable ' '
-						yield a
-					end
-				end
-				@pp.breakable ' '
+			enum = obj.enum_for method
+			RFC7159::Dumper.kandr @pp, @indent, enum, open, close do |obj|
+				yield obj
 			end
-			@pp.text close
 		end
 	end
 
