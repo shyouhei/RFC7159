@@ -56,11 +56,11 @@ class RFC7159::Dumper
 	end
 
 	# @param [#<<]  port  output destination
-	def initialize port, indent = 4, width = 79
+	def initialize port, indent = 4, width = 79, pp = PrettyPrint.new(port, width)
 		@port   = port
 		@bag    = Hash.new
 		@indent = indent
-		@pp     = PrettyPrint.new @port, width
+		@pp     = pp
 		@bag.compare_by_identity
 	end
 

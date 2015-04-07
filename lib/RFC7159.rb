@@ -68,6 +68,18 @@ module RFC7159
 		bag.start_dump obj
 		return port
 	end
+
+	# (Experimental)  Sometimes   JSON  is   required  somewhere  inside   of  a
+	# pretty-print,  and  you  might  want  to  inherit  the  indentation(s)  of
+	# surrounding  PP structure.   In order  to  do so  here we  propose a  dump
+	# variant that takes a PP object rather than destination IO.
+	# @param  [::Object]  obj    The input (should be JSONable)
+	# @param  [PP]        pp     The PP.
+	def self.pp_object pp, obj, indent=4
+		bag = RFC7159::Dumper.new nil, indent, nil, pp
+		bag.start_dump obj
+		return nil
+	end
 end
 
 # 
