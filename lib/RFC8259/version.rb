@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 # The version
-RFC8259::VERSION = 7159.05
+RFC8259::VERSION = 8259
 
 # 
 # Local Variables:
