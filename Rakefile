@@ -52,17 +52,17 @@ end
 require 'yard'
 YARD::Rake::YardocTask.new
 
-task yard:  'lib/RFC7159/parser.rb'
-task rdoc:  'lib/RFC7159/parser.rb'
-task build: 'lib/RFC7159/parser.rb'
-task spec:  'lib/RFC7159/parser.rb'
-file 'lib/RFC7159/parser.rb' => %w'lib/RFC7159/parser.ry' do |t|
+task yard:  'lib/RFC8259/parser.rb'
+task rdoc:  'lib/RFC8259/parser.rb'
+task build: 'lib/RFC8259/parser.rb'
+task spec:  'lib/RFC8259/parser.rb'
+file 'lib/RFC8259/parser.rb' => %w'lib/RFC8259/parser.ry' do |t|
 	sh "bundle exec racc --debug --output-file=#{t.name} #{t.prerequisites.first}"
 end
 
 desc "a la rails console"
 task :console do
-	require_relative 'lib/RFC7159'
+	require_relative 'lib/RFC8259'
 	require 'json'
 	require 'yajl'
 	require 'oj'

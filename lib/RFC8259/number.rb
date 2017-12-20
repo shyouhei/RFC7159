@@ -33,8 +33,8 @@
 
 require 'bigdecimal'
 
-# The Numbers, as described in RFC7159 section 6.
-class RFC7159::Number < RFC7159::Value
+# The Numbers, as described in RFC8259 section 6.
+class RFC8259::Number < RFC8259::Value
 
 	# Notie  about technical  design: this  class  _could_ have  been made  much
 	# faster if we implement the whole  type-conversion thing by hand.  But that

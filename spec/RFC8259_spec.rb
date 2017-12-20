@@ -34,7 +34,7 @@
 require_relative 'spec_helper'
 require 'pathname'
 
-describe RFC7159 do
+describe RFC8259 do
 	this_dir = Pathname.new __dir__
 
 	describe '.load' do
@@ -51,7 +51,7 @@ describe RFC7159 do
 					it "should accept: #{enc}-encoded #{f.basename}" do
 						expect do
 							f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp|
-								RFC7159.load fp
+								RFC8259.load fp
 							end
 						end.to_not raise_exception
 					end
@@ -64,7 +64,7 @@ describe RFC7159 do
 					it "should reject: #{enc}-encoded #{f.basename}" do
 						expect do
 							f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp|
-								RFC7159.load fp
+								RFC8259.load fp
 							end
 						end.to raise_exception
 					end
@@ -86,8 +86,8 @@ describe RFC7159 do
 				case f.extname when '.json'
 				it "should round-trip in #{enc}: #{f.basename}" do
 						str1 = f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp| fp.read end
-						obj  = RFC7159.load str1
-						str2 = RFC7159.dump obj
+						obj  = RFC8259.load str1
+						str2 = RFC8259.dump obj
 						str3 = str1.encode(Encoding::UTF_8)
 						# not interested in indents
 						expect(str2.gsub(/\s+/, '')).to eq(str3.gsub(/\s+/, ''))
@@ -128,15 +128,15 @@ describe RFC7159 do
 				Proc.new {}       => false,
 			}.each_pair do |src, expected|
 				if expected
-					it { expect(RFC7159.dump src).to eq(expected) }
+					it { expect(RFC8259.dump src).to eq(expected) }
 				else
-					it { expect{RFC7159.dump src}.to raise_exception }
+					it { expect{RFC8259.dump src}.to raise_exception }
 				end
 			end
 
 			it 'raises for loops' do
 				expect do
-					RFC7159.dump [].tap {|i| i << i }
+					RFC8259.dump [].tap {|i| i << i }
 				end.to raise_exception(Errno::ELOOP)
 			end
 		end
@@ -149,7 +149,7 @@ describe RFC7159 do
 			case f.extname when '.json'
 				begin
 					f.open 'r:utf-8' do |fp|
-						RFC7159.load fp, plain:true
+						RFC8259.load fp, plain:true
 					end
 				rescue RuntimeError
 					# there are cases JSON can't be represented in PORO
@@ -246,7 +246,7 @@ describe RFC7159 do
 					context f.basename do
 						before :all do
 							str   = f.open 'r:utf-8' do |fp| fp.read end
-							@ours = RFC7159.load str, plain: true
+							@ours = RFC8259.load str, plain: true
 							begin
 								@theirs = howto[:load].(str)
 							rescue
@@ -269,7 +269,7 @@ describe RFC7159 do
 						end
 
 						it "compare dump ours" do
-							ours   = RFC7159.dump @ours
+							ours   = RFC8259.dump @ours
 							theirs = howto[:dump].(@ours) rescue pending($!.message)
 							if ours.gsub(/\s+/, '') != theirs.gsub(/\s+/, '')
 								pending "They dump differently: \n#{ours.dump} versus \n#{theirs.dump}"
@@ -277,7 +277,7 @@ describe RFC7159 do
 						end
 
 						it "compare dump theirs" do
-							ours   = RFC7159.dump @theirs
+							ours   = RFC8259.dump @theirs
 							theirs = (howto[:dump].(@theirs) rescue pending($!.message))
 							if ours.gsub(/\s+/, '') != theirs.gsub(/\s+/, '')
 								pending "They dump differently: \n#{ours.dump} versus \n#{theirs.dump}"

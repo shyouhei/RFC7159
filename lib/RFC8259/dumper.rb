@@ -35,7 +35,7 @@ require_relative 'value'
 require 'prettyprint'
 
 # Dumps ruby object into JSON string
-class RFC7159::Dumper
+class RFC8259::Dumper
 
 	# much like PP#object_group, except that it indents like K&R.
 	def self.kandr pp, indent, enum, open, close
@@ -79,14 +79,14 @@ class RFC7159::Dumper
 	def dump obj
 		obj2 = try_convert obj
 		case obj2
-		when ::Array, RFC7159::Array then
+		when ::Array, RFC8259::Array then
 			kandr obj2, :each, '[', ']' do |i|
 				dump i
 			end
-		when ::Hash, RFC7159::Object then
+		when ::Hash, RFC8259::Object then
 			kandr obj2, :each_pair, '{', '}' do |(i, j)|
 				case i
-				when ::String, RFC7159::String
+				when ::String, RFC8259::String
 					dump i
 				else
 					dump i.to_str # should raise for non-string-ish
@@ -94,7 +94,7 @@ class RFC7159::Dumper
 				@pp.text ': '
 				dump j
 			end
-		when RFC7159::Value then
+		when RFC8259::Value then
 			obj3 = obj2.to_json
 			@pp.text obj3
 		when ::String then
@@ -144,7 +144,7 @@ class RFC7159::Dumper
 	def kandr obj, method, open, close
 		ensure_unique obj do
 			enum = obj.enum_for method
-			RFC7159::Dumper.kandr @pp, @indent, enum, open, close do |obj|
+			RFC8259::Dumper.kandr @pp, @indent, enum, open, close do |obj|
 				yield obj
 			end
 		end
@@ -152,7 +152,7 @@ class RFC7159::Dumper
 
 	def try_convert obj
 		case obj
-		when RFC7159::Value, Hash, Array, String, Integer, Float, BigDecimal, TrueClass, FalseClass, NilClass
+		when RFC8259::Value, Hash, Array, String, Integer, Float, BigDecimal, TrueClass, FalseClass, NilClass
 			return obj
 		else
 			begin
@@ -189,7 +189,7 @@ class RFC7159::Dumper
 				buf  = str2.unpack('U*')
 			end
 		rescue Encoding::UndefinedConversionError
-			# str might be invalid, but that's OK as per RFC7159 section 8.2.
+			# str might be invalid, but that's OK as per RFC8259 section 8.2.
 		end
 
 		unless buf

@@ -41,9 +41,9 @@ _yardoc
 coverage
 doc/
 lib/bundler/man
-lib/RFC7159/parser.rb
-lib/RFC7159/parser.tab.rb
-lib/RFC7159/parser.output
+lib/RFC8259/parser.rb
+lib/RFC8259/parser.tab.rb
+lib/RFC8259/parser.output
 pkg
 rdoc
 spec/reports

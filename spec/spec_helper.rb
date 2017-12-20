@@ -41,12 +41,12 @@ RSpec.configure do |c|
 end
 
 SimpleCov.start do
-	add_filter 'lib/RFC7159/parser.rb'
+	add_filter 'lib/RFC8259/parser.rb'
 	add_filter 'vendor/'
 	add_filter 'spec/'
 end
 
-require_relative '../lib/RFC7159' # <- need this *after* simplecov
+require_relative '../lib/RFC8259' # <- need this *after* simplecov
 
 # 
 # Local Variables:

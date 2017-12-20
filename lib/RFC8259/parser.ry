@@ -31,14 +31,14 @@
 # ARISING IN ANY  WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF  ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# This is  almost one-to-one translation of  RFC7159 section 2 through  7, from
+# This is  almost one-to-one translation of  RFC8259 section 2 through  7, from
 # Augmented BNF  to Racc BNF.  Should  be the easiest to  verify implementation
 # against the spec.
 #
 # @note This  parser has several  shift/reduct conflicts.  They are  all around
 #   handling of white spaces (called "ws"), so can silently be ignored.  I also
 #   checked the parser internal and made sure they are OK.
-class RFC7159::Parser
+class RFC8259::Parser
 
 	options no_result_var
 	expect 28
@@ -50,7 +50,7 @@ class RFC7159::Parser
 	# nonterminals; they  are prefixed  with "__"  so you  can distinguish  if a
 	# nonterminal is RFC-origin or not.
 
-	# RFC7159 section 2
+	# RFC8259 section 2
 
 	JSON_text       : ws value  ws                              { val[1] }
 	begin_array     : ws "\x5B" ws # [ left square bracket
@@ -65,14 +65,14 @@ class RFC7159::Parser
 	                | ws "\x0A"    # Line feed or New line
 	                | ws "\x0D"    # Carriage return
 
-	# RFC7159 section 3
+	# RFC8259 section 3
 
 	value           : false | null | true | object | array | number | string
 	false           : "\x66" "\x61" "\x6c" "\x73" "\x65"        { [ :false ] } # false
 	null            : "\x6e" "\x75" "\x6c" "\x6c"               { [ :null  ] } # null
 	true            : "\x74" "\x72" "\x75" "\x65"               { [ :true  ] } # true
 
-	# RFC7159 section 4
+	# RFC8259 section 4
 
 	object          : begin_object             end_object       { [ :object ] }
 	                | begin_object __members__ end_object       { [ :object, *val[1] ] }
@@ -80,14 +80,14 @@ class RFC7159::Parser
 	                | __members__ value_separator member        { [ *val[0],  val[2] ] }
 	member          : string name_separator value               { [  val[0],  val[2] ] }
 
-	# RFC7159 section 5
+	# RFC8259 section 5
 
 	array           : begin_array          end_array            { [ :array ] }
 	                | begin_array __list__ end_array            { [ :array, *val[1] ] }
 	__list__        : value                                     { val }
 	                | __list__ value_separator value            { [ *val[0], val[2] ] }
 
-	# RFC7159 section 6
+	# RFC8259 section 6
 
 	number          : __minus_p__ int __frac_p__ __exp_p__      { [ :number, *val ] }
 	__minus_p__     : | minus
@@ -110,7 +110,7 @@ class RFC7159::Parser
 	__digit_plus__  : DIGIT                                     { val }
 	                | __digit_plus__ DIGIT                      { [ *val[0], val[1] ] }
 
-	# RFC7159 section 7
+	# RFC8259 section 7
 
 	string          : quotation_mark           quotation_mark   { [ :string ] }
 	                | quotation_mark __chars__ quotation_mark   { [ :string, *val[1] ] }
@@ -168,7 +168,7 @@ end
 		     Encoding::UTF_16BE,
 		     Encoding::UTF_32LE,
 		     Encoding::UTF_32BE
-			# RFC7159 sectoin 8.1 explicitly states  that the input string must be
+			# RFC8259 sectoin 8.1 explicitly states  that the input string must be
 			# either UTF  8, 16, or  32 -encoded.  That point  is as clear  as the
 			# sky.  All other  encodings are NG.  However, what we  call the ASCII
 			# encoding is the  true subset of UTF-8.  A string  of ASCII must also
@@ -176,7 +176,7 @@ end
 			#
 			# There are disucssions about parsing BOMs.  The original RFC4627 said
 			# nothing about  BOMs, however  its section  3 ("Encoding")  cannot be
-			# read  as  if  it  expected BOMs.   Current  RFC7159  _prohibits_  to
+			# read  as  if  it  expected BOMs.   Current  RFC8259  _prohibits_  to
 			# generate JSON texts with BOMs but _allows_ to accept.
 			#
 			# This parser can control whether to accept BOMs.
@@ -187,7 +187,7 @@ end
 		else
 			raise Encoding::CompatibilityError, <<-"end".gsub(/[\n\s]+/, ' ')
 				``JSON text  SHALL be encoded  in UTF-8, UTF-16, or  UTF-32'', said
-				RFC7159  section 8.1.   The given  string is  NOT in  any of  those
+				RFC8259  section 8.1.   The given  string is  NOT in  any of  those
 				encodings (but #{@enc.inspect}).
 			end
 		end
