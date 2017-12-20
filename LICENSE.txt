@@ -1,6 +1,6 @@
-The  file “README.txt”  and “RFC7159”  (identical contents)  is an
+The  file “README.txt”  and “RFC8259”  (identical contents)  is an
 Internet Engineering  Task Force  (IETF) document  and is  copied here
-under IETF Trust's Legal Provision (TLP) version 4.0 section 3.c.i:
+under IETF Trust's Legal Provision (TLP) version 5.0 section 3.c.i
 
 http://trustee.ietf.org/trust-legal-provisions.html
 
