@@ -38,35 +38,47 @@ describe RFC8259 do
 	this_dir = Pathname.new __dir__
 
 	describe '.load' do
+		the_dir = this_dir + 'acceptance/valid'
+		the_dir.find do |f|
+			case f.extname when '.json'
+				it "should accept: #{f.basename}" do
+					expect do
+						f.open encoding: Encoding::UTF_8 do |fp|
+							RFC8259.load fp
+						end
+					end.to_not raise_exception
+				end
+			end
+		end
+
+		the_dir = this_dir + 'acceptance/invalid'
+		the_dir.find do |f|
+			case f.extname when '.txt'
+				it "should reject: #{f.basename}" do
+					expect do
+						f.open do |fp|
+							RFC8259.load fp
+						end
+					end.to raise_exception
+				end
+			end
+		end
+
 		[
-		 Encoding::UTF_8,
 		 Encoding::UTF_16BE,
 		 Encoding::UTF_16LE,
 		 Encoding::UTF_32BE,
 		 Encoding::UTF_32LE,
 		].each do |enc|
-			the_dir = this_dir + 'acceptance/valid'
+			the_dir = this_dir + 'acceptance'
 			the_dir.find do |f|
-				case f.extname when '.json'
-					it "should accept: #{enc}-encoded #{f.basename}" do
-						expect do
-							f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp|
-								RFC8259.load fp
-							end
-						end.to_not raise_exception
-					end
-				end
-			end
-
-			the_dir = this_dir + 'acceptance/invalid'
-			the_dir.find do |f|
-				case f.extname when '.txt'
+				case f.extname when '.json', '.txt'
 					it "should reject: #{enc}-encoded #{f.basename}" do
 						expect do
 							f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp|
 								RFC8259.load fp
 							end
-						end.to raise_exception
+						end.to raise_exception(Encoding::CompatibilityError)
 					end
 				end
 			end
@@ -74,24 +86,15 @@ describe RFC8259 do
 	end
 
 	describe '.dump' do
-		[
-		 Encoding::UTF_8,
-		 Encoding::UTF_16BE,
-		 Encoding::UTF_16LE,
-		 Encoding::UTF_32BE,
-		 Encoding::UTF_32LE,
-		].each do |enc|
-			the_dir = this_dir + 'acceptance/valid'
-			the_dir.find do |f|
-				case f.extname when '.json'
-				it "should round-trip in #{enc}: #{f.basename}" do
-						str1 = f.open "rb", external_encoding: Encoding::UTF_8, internal_encoding: enc do |fp| fp.read end
-						obj  = RFC8259.load str1
-						str2 = RFC8259.dump obj
-						str3 = str1.encode(Encoding::UTF_8)
-						# not interested in indents
-						expect(str2.gsub(/\s+/, '')).to eq(str3.gsub(/\s+/, ''))
-					end
+		the_dir = this_dir + 'acceptance/valid'
+		the_dir.find do |f|
+			case f.extname when '.json'
+				it "should round-trip: #{f.basename}" do
+					str1 = f.read encoding: Encoding::UTF_8
+					obj  = RFC8259.load str1
+					str2 = RFC8259.dump obj
+					# not interested in indents
+					expect(str2.gsub(/\s+/, '')).to eq(str1.gsub(/\s+/, ''))
 				end
 			end
 		end

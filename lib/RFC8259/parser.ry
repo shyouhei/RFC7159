@@ -163,16 +163,12 @@ end
 		case @enc = firstchar.encoding
 		when Encoding::UTF_8,
 		     Encoding::US_ASCII, # true subset of UTF-8
-		     Encoding::UTF8_MAC, # true subset of UTF-8
-		     Encoding::UTF_16LE,
-		     Encoding::UTF_16BE,
-		     Encoding::UTF_32LE,
-		     Encoding::UTF_32BE
+		     Encoding::UTF8_MAC  # true subset of UTF-8
 			# RFC8259 sectoin 8.1 explicitly states  that the input string must be
-			# either UTF  8, 16, or  32 -encoded.  That point  is as clear  as the
-			# sky.  All other  encodings are NG.  However, what we  call the ASCII
-			# encoding is the  true subset of UTF-8.  A string  of ASCII must also
-			# be valid as UTF-8.  So we allow this.
+			# UTF-8  encoded.  That  point  is as  clear as  the  sky.  All  other
+			# encodings are NG.   However, what we call the ASCII  encoding is the
+			# true  subset of  UTF-8.  A  string of  ASCII must  also be  valid as
+			# UTF-8.  So we allow this.
 			#
 			# There are disucssions about parsing BOMs.  The original RFC4627 said
 			# nothing about  BOMs, however  its section  3 ("Encoding")  cannot be
@@ -186,9 +182,9 @@ end
 			return do_parse
 		else
 			raise Encoding::CompatibilityError, <<-"end".gsub(/[\n\s]+/, ' ')
-				``JSON text  SHALL be encoded  in UTF-8, UTF-16, or  UTF-32'', said
-				RFC8259  section 8.1.   The given  string is  NOT in  any of  those
-				encodings (but #{@enc.inspect}).
+				``JSON text exchanged between systems that are not part of a closed
+				ecosystem MUST be encoded using	UTF-8'', said RFC8259 section 8.1.
+				The given string is NOT in the encoding (but #{@enc.inspect}).
 			end
 		end
 	end
